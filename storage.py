@@ -1,6 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
-from exc import AbortException
 from sqlalchemy import desc
+from exc import AbortException
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from typing import (
     Type,
@@ -42,7 +42,7 @@ class DBStorage(SQLAlchemy):
             raise AbortException({'error': str(err).split('\n')[0]})
 
     def update(self, model_type: Type[Model], id: str, **fields: Dict) -> Model:
-        from app_main import bcrypt
+        from app import bcrypt
 
         model = self.session.get(model_type, id)
         if not model:
@@ -53,7 +53,8 @@ class DBStorage(SQLAlchemy):
                 value = bcrypt.generate_password_hash(value).decode('utf-8')
 
             setattr(model, field, value)
-            return self.save(model_type, model)
+
+        return self.save(model_type, model)
 
     def get(self, model_type: Type[Model], **fields: Dict) -> List[Model]:
         return self.session.query(model_type).filter_by(**fields).first()

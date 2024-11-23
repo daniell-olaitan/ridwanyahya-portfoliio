@@ -3,15 +3,10 @@ load_dotenv()
 
 from os import getenv
 from storage import db
-from models import User
-from config import config
-from flask_cors import CORS
+from app import create_app
 from exc import AbortException
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager
 from flask.typing import ResponseReturnValue
 from flask import (
-    Flask,
     abort,
     jsonify,
     request
@@ -25,27 +20,11 @@ from validations import (
     validate_input
 )
 
-bcrypt = Bcrypt()
-jwt = JWTManager()
-
-app = Flask(__name__)
-app.url_map.strict_slashes = False
-app.config.from_object(config[getenv('CONFIG') or 'default'])
-
-db.init_app(app)
-jwt.init_app(app)
-bcrypt.init_app(app)
-CORS(app, resources={
-    r'/*': {
-        'origins': '*'
-    }
-})
-
+app = create_app(getenv('CONFIG') or 'default')
 with app.app_context():
+    from models import User
+
     db.create_all()
-
-
-with app.app_context():
     admin = db.get(User, email='oluwidaad@gmail.com')
     if not admin:
         admin = db.save_new(User)
@@ -126,7 +105,6 @@ def app_status() -> ResponseReturnValue:
 
 #app views
 import os
-from auth import Auth
 from models import (
     Company,
     Project,
@@ -139,13 +117,16 @@ from flask_jwt_extended import (
     create_access_token
 )
 
-auth = Auth()
+
 @app.route('/login', methods=['POST'])
 def login() -> ResponseReturnValue:
+    from auth import Auth
+
     form_data = request.form.to_dict()
     if not validate_input(LoginSchema, **form_data):
         abort(422)
 
+    auth = Auth()
     user = auth.authenticate_user(form_data['email'], form_data['password'])
     access_token = create_access_token(identity=user.id)
     return jsonify({
@@ -172,12 +153,14 @@ def logout() -> ResponseReturnValue:
 @app.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password() -> ResponseReturnValue:
+    from auth import Auth
     from flask_jwt_extended import get_jwt_identity
 
     form_data = request.form.to_dict()
     if not validate_input(PasswordSchema, **form_data):
         abort(422)
 
+    auth = Auth()
     user = db.get(User, id=get_jwt_identity())
     user = auth.authenticate_user(user.email, form_data['current_password'])
     user = db.update(User, id=user.id, password=form_data['new_password'])
@@ -187,7 +170,6 @@ def change_password() -> ResponseReturnValue:
             'message': 'password changed'
         }
     }), 200
-
 
 @app.route('/companies/<string:id>', methods=['GET'])
 def get_a_company(id: str) -> ResponseReturnValue:
@@ -252,7 +234,7 @@ def delete_a_project(id: str) -> ResponseReturnValue:
     }), 200
 
 
-@app.route('companies', methods=['POST'])
+@app.route('/companies', methods=['POST'])
 @jwt_required()
 def create_a_company() -> ResponseReturnValue:
     form_data = request.form.to_dict()
@@ -266,7 +248,7 @@ def create_a_company() -> ResponseReturnValue:
     }), 201
 
 
-@app.route('projects', methods=['POST'])
+@app.route('/projects', methods=['POST'])
 @jwt_required()
 def create_a_project() -> ResponseReturnValue:
     form_data = request.form.to_dict()
@@ -276,9 +258,9 @@ def create_a_project() -> ResponseReturnValue:
     project = db.save_new(Project, **form_data)
     image = request.files.get('image')
     if image:
-        os.makedirs(os.getenv('UPLOAD_DIR'), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, os.getenv('UPLOAD_DIR')), exist_ok=True)
         filename = project.id + os.path.splitext(image.filename)[1]
-        file_path = os.path.join(os.getenv('UPLOAD_DIR'), filename)
+        file_path = os.path.join(app.root_path, os.getenv('UPLOAD_DIR'), filename)
         image.save(file_path)
         db.update(Project, id=project.id, image=filename)
 
@@ -288,47 +270,48 @@ def create_a_project() -> ResponseReturnValue:
     }), 201
 
 
-@app.route('companies/<string:id>', methods=['PATCH'])
+@app.route('/companies/<string:id>', methods=['PATCH'])
 @jwt_required()
-def update_a_company() -> ResponseReturnValue:
+def update_a_company(id: str) -> ResponseReturnValue:
     form = request.form.to_dict()
     if not validate_input(CompanySchema, **form):
         abort(422)
 
     form_data = {}
-    for key, val in form:
+    for key, val in form.items():
         if val is None:
             continue
 
         form_data[key] = val
 
-    company = db.update(Company, **form_data)
+    company = db.update(Company, id, **form_data)
     return jsonify({
         'status': 'success',
         'data': company.to_dict()
     }), 200
 
 
-@app.route('projects/<string:id>', methods=['PATCH'])
+@app.route('/projects/<string:id>', methods=['PATCH'])
 @jwt_required()
-def update_a_project() -> ResponseReturnValue:
+def update_a_project(id: str) -> ResponseReturnValue:
     form = request.form.to_dict()
     if not validate_input(ProjectSchema, **form):
         abort(422)
 
     form_data = {}
-    for key, val in form:
+    for key, val in form.items():
         if val is None:
             continue
 
         form_data[key] = val
 
-    project = db.update(Project, **form_data)
+    print(form_data)
+    project = db.update(Project, id, **form_data)
     image = request.files.get('image')
     if image:
-        os.makedirs(os.getenv('UPLOAD_DIR'), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, os.getenv('UPLOAD_DIR')), exist_ok=True)
         filename = project.id + os.path.splitext(image.filename)[1]
-        file_path = os.path.join(os.getenv('UPLOAD_DIR'), filename)
+        file_path = os.path.join(app.root_path, os.getenv('UPLOAD_DIR'), filename)
         image.save(file_path)
         db.update(Project, id=project.id, image=filename)
 

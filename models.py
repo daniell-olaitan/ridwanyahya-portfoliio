@@ -2,7 +2,7 @@ import uuid
 from storage import db
 from sqlalchemy import event
 from typing import Dict
-from app_main import bcrypt
+from app import bcrypt
 from datetime import datetime
 
 
@@ -66,9 +66,10 @@ class InvalidToken(BaseModel, db.Model):
 
 def delete_file(mapper, connection, target):
     import os
+    from app_main import app
 
     if target.image:
-        path = os.path.join(os.getenv('UPLOAD_DIR'), target.image)
+        path = os.path.join(app.root_path, os.getenv('UPLOAD_DIR'), target.image)
         if os.path.exists(path):
             os.remove(path)
 

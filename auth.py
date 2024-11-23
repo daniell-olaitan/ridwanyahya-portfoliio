@@ -2,8 +2,8 @@
 Module for authentication
 """
 import typing as t
+from app import jwt
 from storage import db
-from app_main import jwt
 from flask import jsonify
 from exc import AbortException
 from flask.typing import ResponseReturnValue
@@ -74,12 +74,12 @@ class Auth:
         """
         Validate user login details
         """
-        from app_main import bcrypt
+        from app import bcrypt
 
         user = db.get(User, email=email)
         if user:
             if bcrypt.check_password_hash(user.password, password):
                 return user
 
-            raise AbortException({'error':'invalid password'})
-        raise AbortException({'error':'email not registerd'})
+            raise AbortException({'error': 'invalid password'})
+        raise AbortException({'error': 'email not registerd'})

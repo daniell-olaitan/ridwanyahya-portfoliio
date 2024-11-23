@@ -1,1 +1,1 @@
-_API endpoint for personal portfolio_
+_API endpoints for personal portfolio_
