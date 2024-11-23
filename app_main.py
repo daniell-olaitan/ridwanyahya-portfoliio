@@ -61,16 +61,6 @@ def method_not_allowed(_: Exception) -> ResponseReturnValue:
     }), 405
 
 
-@app.errorhandler(403)
-def forbidded(_: Exception) -> ResponseReturnValue:
-    return jsonify({
-        'status': 'fail',
-        'data': {
-            'error': 'you are forbidden to perform this action'
-        }
-    }), 403
-
-
 @app.errorhandler(401)
 def unathorized(_: Exception) -> ResponseReturnValue:
     return jsonify({
@@ -170,6 +160,7 @@ def change_password() -> ResponseReturnValue:
             'message': 'password changed'
         }
     }), 200
+
 
 @app.route('/companies/<string:id>', methods=['GET'])
 def get_a_company(id: str) -> ResponseReturnValue:

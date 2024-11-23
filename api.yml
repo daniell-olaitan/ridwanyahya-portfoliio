@@ -1,0 +1,612 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: portfolio API
+  description: A simple API to provide backend functionality for user portfolio
+  contact:
+    name: Daniel OLAITAN
+    url: https://danielolaitan.live/me
+    email: daniell.olaitan@gmail.com
+servers:
+  - url: base_url
+paths:
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Login a user
+      description: Login a user
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  access_token:
+                    type: string
+        400:
+          description: Bad Request - returned when invalid password or email is provided with customized error message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  data:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+        422:
+          $ref: '#/components/responses/422Error'
+  /change-password:
+    post:
+      tags:
+        - Auth
+      summary: Change password
+      description: Change user's password
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                new_password:
+                  type: string
+                repeat_password:
+                  type: string
+              required:
+                - current_password
+                - new_password
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'password changed'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  data:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'invalid password'
+        401:
+          $ref: '#/components/responses/401TokenError'
+        422:
+          $ref: '#/components/responses/422Error'
+  /logout:
+    get:
+      tags:
+        - Auth
+      summary: Log out user
+      description: Log out user
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+        401:
+          $ref: '#/components/responses/401TokenError'
+  /companies/{id}:
+    get:
+      tags:
+        - Endpoints
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the company to retrieve.
+          required: true
+          schema:
+            type: string
+      summary: Fetch a company
+      description: Fetch a company
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Company'
+        404:
+          $ref: '#/components/responses/404Error'
+    delete:
+      tags:
+        - Endpoints
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the company to retrieve.
+          required: true
+          schema:
+            type: string
+      summary: Delete a company
+      description: Delete a company
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    type: object
+        401:
+          $ref: '#/components/responses/401TokenError'
+        404:
+          $ref: '#/components/responses/404Error'
+    patch:
+      tags:
+        - Endpoints
+      summary: Update a company
+      description: Update a company
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the company to retrieve.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Company'
+        401:
+          $ref: '#/components/responses/401TokenError'
+        404:
+          $ref: '#/components/responses/404Error'
+        422:
+          $ref: '#/components/responses/422Error'
+  /companies:
+    get:
+      tags:
+        - Endpoints
+      summary: Fetch the entire companies
+      description: Fetch the entire companies
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Company'
+    post:
+      tags:
+        - Endpoints
+      summary: Create a new company
+      description: Create a new company
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+              required:
+                - name
+                - description
+      responses:
+        201:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Company'
+        401:
+          $ref: '#/components/responses/401TokenError'
+        422:
+          $ref: '#/components/responses/422Error'
+  /projects/{id}:
+    get:
+      tags:
+        - Endpoints
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the project to retrieve.
+          required: true
+          schema:
+            type: string
+      summary: Fetch a project
+      description: Fetch a project, the image string returned is the filename to be fetched using the /serve-image/{filename} endpoint
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/404Error'
+    delete:
+      tags:
+        - Endpoints
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the project to retrieve.
+          required: true
+          schema:
+            type: string
+      summary: Delete a project
+      description: Delete a project
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+        401:
+          $ref: '#/components/responses/401TokenError'
+        404:
+          $ref: '#/components/responses/404Error'
+    patch:
+      tags:
+        - Endpoints
+      summary: Update a project
+      description: Update a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the project to retrieve.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                url:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Project'
+        401:
+          $ref: '#/components/responses/401TokenError'
+        404:
+          $ref: '#/components/responses/404Error'
+        422:
+          $ref: '#/components/responses/422Error'
+  /projects:
+    get:
+      tags:
+        - Endpoints
+      summary: Fetch the entire projects
+      description: Fetch the entire projects
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+    post:
+      tags:
+        - Endpoints
+      summary: Create a new project
+      description: Create a new project
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                url:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required:
+                - name
+                - description
+      responses:
+        201:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    $ref: '#/components/schemas/Project'
+        401:
+          $ref: '#/components/responses/401TokenError'
+        422:
+          $ref: '#/components/responses/422Error'
+  /serve-image/{filename}:
+    get:
+      tags:
+        - Endpoints
+      parameters:
+        - name: filename
+          in: path
+          description: The unique filename of the image to retrieve.
+          required: true
+          schema:
+            type: string
+      summary: Fetch an image
+      description: Fetch an image. The image name is from a returned project
+      responses:
+        200:
+          description: success
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        404:
+          $ref: '#/components/responses/404Error'
+  /status:
+    get:
+      tags:
+        - Endpoints
+      summary: Get the status of the application
+      description: Get the status of the application
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sucess
+                  data:
+                    type: object
+                    properties:
+                      app_status:
+                        type: string
+                        example: 'active'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Company:
+      type: object
+      properties:
+        created_at:
+          type: string
+          example: '2021-02-01T00:00:00'
+        updated_at:
+          type: string
+          example: '2021-02-01T00:00:00'
+        name:
+          type: string
+        description:
+          type: string
+    Project:
+      type: object
+      properties:
+        created_at:
+          type: string
+          example: '2021-02-01T00:00:00'
+        updated_at:
+          type: string
+          example: '2021-02-01T00:00:00'
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        image:
+          type: string
+  responses:
+    401TokenError:
+      description: Authorization Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: fail
+              data:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 'missing access token'
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: fail
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'not found'
+    422Error:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: fail
+              data:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'invalid input'
