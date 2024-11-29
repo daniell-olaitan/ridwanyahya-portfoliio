@@ -24,8 +24,16 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 
-class DeploymentConfig(DevelopmentConfig):
+class DeploymentConfig(Config):
     DEBUG = False
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=15)
+    SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:{}/{}".format(
+        getenv('DATABASE_USERNAME'),
+        getenv('DATABASE_PASSWORD'),
+        getenv('DATABASE_HOST'),
+        getenv('DATABASE_PORT'),
+        getenv('DATABASE')
+    )
 
 
 config = {
