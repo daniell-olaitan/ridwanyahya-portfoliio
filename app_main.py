@@ -80,6 +80,7 @@ def abort_error(err: Exception) -> ResponseReturnValue:
 
 
 #status route
+@app.route('/', methods=['GET'])
 @app.route('/status', methods=['GET'])
 def app_status() -> ResponseReturnValue:
     """
@@ -88,7 +89,7 @@ def app_status() -> ResponseReturnValue:
     return jsonify({
         'status': 'success',
         'data': {
-            'app_status': 'active'
+            'app_status': 'your app is active'
         }
     }), 200
 
