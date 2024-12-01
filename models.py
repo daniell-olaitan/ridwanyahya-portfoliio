@@ -33,11 +33,11 @@ class BaseModel:
 
 class User(BaseModel, db.Model):
     __tablename__ = 'user'
-    email = db.Column(db.String(60), nullable=False, default='oluwidaad@gmail.com')
+    email = db.Column(db.String(60), nullable=False, default=getenv('ADMIN_EMAIL'))
     password = db.Column(
         db.String(60),
         nullable=False,
-        default=bcrypt.generate_password_hash('admin123').decode('utf-8')
+        default=bcrypt.generate_password_hash(getenv('ADMIN_PWD')).decode('utf-8')
     )
 
 

@@ -25,7 +25,7 @@ with app.app_context():
     from models import User
 
     db.create_all()
-    admin = db.get(User, email='oluwidaad@gmail.com')
+    admin = db.get(User, email=getenv('ADMIN_EMAIL'))
     if not admin:
         admin = db.save_new(User)
 
