@@ -17,11 +17,7 @@ def create_app(app_env: str) -> Flask:
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    CORS(app, resources={
-        r'/*': {
-            'origins': '*'
-        }
-    })
+    CORS(app, supports_credentials=True)
 
     with app.app_context():
         db.create_all()
