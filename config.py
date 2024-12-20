@@ -27,11 +27,9 @@ class TestingConfig(Config):
 class DeploymentConfig(Config):
     DEBUG = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=15)
-    SQLALCHEMY_DATABASE_URI = "mysql://{}:{}@{}:{}/{}".format(
+    SQLALCHEMY_DATABASE_URI = "mysql://{}:{}@localhost/{}".format(
         getenv('DATABASE_USERNAME'),
         getenv('DATABASE_PASSWORD'),
-        getenv('DATABASE_HOST'),
-        getenv('DATABASE_PORT'),
         getenv('DATABASE')
     )
 
